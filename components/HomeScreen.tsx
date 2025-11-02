@@ -10,9 +10,13 @@ import HashtagIcon from './icons/HashtagIcon';
 interface HomeScreenProps {
   onStartQuiz: (mode: QuizMode, options?: { topics?: string[], hashtag?: string }) => void;
   error: string | null;
+  numQuestions: number;
+  onNumQuestionsChange: (count: number) => void;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onStartQuiz, error }) => {
+const QUESTION_COUNTS = [5, 10, 20, 50];
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ onStartQuiz, error, numQuestions, onNumQuestionsChange }) => {
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [showHashtagInput, setShowHashtagInput] = useState(false);
@@ -37,8 +41,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartQuiz, error }) => {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen text-center">
-      <div className="max-w-3xl mx-auto">
+    <main className="flex flex-col items-center justify-center h-full text-center">
+      <div className="max-w-3xl mx-auto w-full">
         <BarChartIcon className="h-24 w-24 mx-auto text-sky-400" />
         <h1 className="text-4xl sm:text-5xl font-bold mt-4">
           Preguntas para aprender <span className="text-sky-300">Bioestadística</span>
@@ -53,31 +57,54 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartQuiz, error }) => {
 
         {error && <p className="mt-6 text-red-400 bg-red-900/50 p-3 rounded-md">{error}</p>}
 
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-          <button
-            onClick={() => onStartQuiz(QuizMode.Random)}
-            className="flex items-center justify-center gap-3 p-4 bg-sky-600 hover:bg-sky-500 rounded-lg shadow-lg text-white font-semibold text-lg transition-transform transform hover:scale-105"
-            aria-label="Iniciar cuestionario aleatorio"
-          >
-            <RandomIcon className="h-6 w-6" />
-            Cuestionario Aleatorio
-          </button>
-          <button
-            onClick={() => { setShowTopicSelector(!showTopicSelector); setShowHashtagInput(false); }}
-            className="flex items-center justify-center gap-3 p-4 bg-sky-600 hover:bg-sky-500 rounded-lg shadow-lg text-white font-semibold text-lg transition-transform transform hover:scale-105"
-            aria-label="Elegir cuestionario por tema"
-          >
-            <TopicIcon className="h-6 w-6" />
-            Elegir por Tema
-          </button>
-          <button
-            onClick={() => { setShowHashtagInput(!showHashtagInput); setShowTopicSelector(false); }}
-            className="flex items-center justify-center gap-3 p-4 bg-sky-600 hover:bg-sky-500 rounded-lg shadow-lg text-white font-semibold text-lg transition-transform transform hover:scale-105"
-            aria-label="Buscar cuestionario por hashtag"
-          >
-            <HashtagIcon className="h-6 w-6" />
-            Buscar por Hashtag
-          </button>
+        <div className="mt-10 w-full">
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">1. Elige la cantidad de preguntas:</h3>
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 p-2 bg-slate-800 rounded-lg">
+                {QUESTION_COUNTS.map(count => (
+                    <button 
+                        key={count}
+                        onClick={() => onNumQuestionsChange(count)}
+                        className={`p-3 font-bold text-lg rounded-md transition-colors ${
+                            numQuestions === count 
+                            ? 'bg-sky-500 text-white shadow-lg' 
+                            : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                        }`}
+                        aria-pressed={numQuestions === count}
+                    >
+                        {count}
+                    </button>
+                ))}
+            </div>
+        </div>
+
+        <div className="mt-8 w-full">
+          <h3 className="text-xl font-semibold mb-4 text-sky-300">2. Selecciona un modo:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => onStartQuiz(QuizMode.Random)}
+              className="flex items-center justify-center gap-3 p-4 bg-sky-600 hover:bg-sky-500 rounded-lg shadow-lg text-white font-semibold text-lg transition-transform transform hover:scale-105"
+              aria-label="Iniciar cuestionario aleatorio"
+            >
+              <RandomIcon className="h-6 w-6" />
+              Cuestionario Aleatorio
+            </button>
+            <button
+              onClick={() => { setShowTopicSelector(!showTopicSelector); setShowHashtagInput(false); }}
+              className="flex items-center justify-center gap-3 p-4 bg-sky-600 hover:bg-sky-500 rounded-lg shadow-lg text-white font-semibold text-lg transition-transform transform hover:scale-105"
+              aria-label="Elegir cuestionario por tema"
+            >
+              <TopicIcon className="h-6 w-6" />
+              Elegir por Tema
+            </button>
+            <button
+              onClick={() => { setShowHashtagInput(!showHashtagInput); setShowTopicSelector(false); }}
+              className="flex items-center justify-center gap-3 p-4 bg-sky-600 hover:bg-sky-500 rounded-lg shadow-lg text-white font-semibold text-lg transition-transform transform hover:scale-105"
+              aria-label="Buscar cuestionario por hashtag"
+            >
+              <HashtagIcon className="h-6 w-6" />
+              Buscar por Hashtag
+            </button>
+          </div>
         </div>
 
         {showTopicSelector && (

@@ -63,7 +63,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ questions, userAnswers, t
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center max-w-2xl mx-auto">
+    <div className="flex flex-col items-center justify-center h-full text-center max-w-2xl mx-auto">
       <div className="w-full bg-slate-800 p-8 rounded-xl shadow-2xl">
         <h2 className="text-4xl font-bold text-sky-300">Resultados Finales</h2>
         

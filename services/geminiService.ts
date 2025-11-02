@@ -9,15 +9,29 @@ if (!API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-const getPrompt = (mode: QuizMode, options?: { topics?: string[]; hashtag?: string }): string => {
+const getPrompt = (mode: QuizMode, numQuestions: number, options?: { topics?: string[]; hashtag?: string }): string => {
+  const numCalculations = Math.round(numQuestions * 0.2);
+  const numConceptual = numQuestions - numCalculations;
+
+  let topicDiversityRule = '';
+    if (numQuestions >= 50) {
+        topicDiversityRule = 'Las preguntas deben cubrir al menos 15 temas distintos de la bioestadística.';
+    } else if (numQuestions >= 20) {
+        topicDiversityRule = 'Las preguntas deben cubrir al menos 10 temas distintos de la bioestadística.';
+    } else if (numQuestions >= 10) {
+        topicDiversityRule = 'Las preguntas deben cubrir al menos 6 temas distintos de la bioestadística.';
+    } else {
+        topicDiversityRule = 'Las preguntas deben cubrir tantos temas distintos como sea posible.';
+    }
+    
   let prompt = `
     Eres un experto en bioestadística y un excelente docente para estudiantes de ciencias de la salud de grado y posgrado.
-    Tu tarea es generar un cuestionario de 10 preguntas de bioestadística de dificultad leve a moderada.
+    Tu tarea es generar un cuestionario de ${numQuestions} preguntas de bioestadística de dificultad leve a moderada.
     El cuestionario debe estar perfectamente balanceado con la siguiente estructura:
-    - 2 preguntas de tipo "cálculo sencillo".
-    - 8 preguntas de tipo "conceptual/razonamiento".
-    - Las 10 preguntas deben cubrir al menos 6 temas distintos de la bioestadística.
-    - No debe haber más de 3 preguntas del mismo tema.
+    - ${numCalculations} preguntas de tipo "cálculo sencillo".
+    - ${numConceptual} preguntas de tipo "conceptual/razonamiento".
+    - ${topicDiversityRule}
+    - No debe haber más de ${Math.max(3, Math.ceil(numQuestions / 4))} preguntas del mismo tema.
 
     Cada pregunta debe tener:
     - Un ID único.
@@ -44,7 +58,7 @@ const getPrompt = (mode: QuizMode, options?: { topics?: string[]; hashtag?: stri
       break;
   }
 
-  prompt += `\nDevuelve el resultado exclusivamente como un objeto JSON que se ajuste al esquema proporcionado. No incluyas ninguna otra explicación o texto fuera del JSON.`;
+  prompt += `\nDevuelve el resultado exclusivamente como un objeto JSON que sea un array de ${numQuestions} elementos, y que se ajuste al esquema proporcionado. No incluyas ninguna otra explicación o texto fuera del JSON.`;
   return prompt;
 };
 
@@ -88,9 +102,10 @@ const questionSchema = {
 
 export const generateQuiz = async (
   mode: QuizMode,
+  numQuestions: number,
   options?: { topics?: string[]; hashtag?: string }
 ): Promise<Question[]> => {
-  const prompt = getPrompt(mode, options);
+  const prompt = getPrompt(mode, numQuestions, options);
 
   try {
     const response = await ai.models.generateContent({

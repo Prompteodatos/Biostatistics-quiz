@@ -115,7 +115,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onFinish }) => {
   if (!currentQuestion) return null;
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col min-h-[85vh]">
+    <div className="max-w-4xl mx-auto flex flex-col h-full w-full">
       <header className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <ProgressBar current={userAnswers.filter(a => a.answer !== null).length} total={questions.length} />
         <div className="flex-shrink-0 bg-slate-800 px-4 py-2 rounded-lg font-mono text-xl text-sky-300">{formatTime(timer)}</div>
