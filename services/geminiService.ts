@@ -10,39 +10,38 @@ if (!API_KEY) {
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const getPrompt = (mode: QuizMode, numQuestions: number, options?: { topics?: string[]; hashtag?: string }): string => {
-  const numCalculations = Math.round(numQuestions * 0.2);
-  const numConceptual = numQuestions - numCalculations;
-
-  let topicDiversityRule = '';
-    if (numQuestions >= 50) {
-        topicDiversityRule = 'Las preguntas deben cubrir al menos 15 temas distintos de la bioestadística.';
-    } else if (numQuestions >= 20) {
-        topicDiversityRule = 'Las preguntas deben cubrir al menos 10 temas distintos de la bioestadística.';
-    } else if (numQuestions >= 10) {
-        topicDiversityRule = 'Las preguntas deben cubrir al menos 6 temas distintos de la bioestadística.';
-    } else {
-        topicDiversityRule = 'Las preguntas deben cubrir tantos temas distintos como sea posible.';
-    }
+  const numChart = Math.floor(numQuestions / 10);
+  const numOutput = Math.floor(numQuestions / 10);
     
   let prompt = `
     Eres un experto en bioestadística y un excelente docente para estudiantes de ciencias de la salud de grado y posgrado.
     Tu tarea es generar un cuestionario de ${numQuestions} preguntas de bioestadística de dificultad leve a moderada.
-    El cuestionario debe estar perfectamente balanceado con la siguiente estructura:
-    - ${numCalculations} preguntas de tipo "cálculo sencillo".
-    - ${numConceptual} preguntas de tipo "conceptual/razonamiento".
-    - ${topicDiversityRule}
-    - No debe haber más de ${Math.max(3, Math.ceil(numQuestions / 4))} preguntas del mismo tema.
 
-    Cada pregunta debe tener:
-    - Un ID único.
-    - El texto de la pregunta.
-    - 4 opciones de respuesta (A, B, C, D), donde solo una es correcta.
-    - La letra de la respuesta correcta.
-    - Una explicación detallada:
-        - "correct": Una explicación de 2-4 líneas de por qué la respuesta es correcta, usando un enfoque clínico o práctico cuando sea posible.
-        - "incorrect": Explicaciones para las otras 3 opciones, de 1-2 líneas cada una, aclarando malentendidos comunes.
-    - El tema de bioestadística al que pertenece.
-    - El tipo de pregunta: "cálculo sencillo" o "conceptual/razonamiento".
+    El cuestionario DEBE incluir la siguiente composición:
+    - EXACTAMENTE ${numChart} preguntas de tipo "interpretación de gráfico".
+    - EXACTAMENTE ${numOutput} preguntas de tipo "interpretación de salida".
+    - El resto de las preguntas deben ser una mezcla de "cálculo sencillo" y "conceptual/razonamiento".
+
+    REGLAS IMPORTANTES:
+    1.  Para preguntas de "interpretación de gráfico":
+        - Debes generar un GRÁFICO relevante (histograma, boxplot, curva ROC, etc.) como CÓDIGO SVG y colocarlo en el campo "svgChart". El SVG debe ser claro, legible, con ejes etiquetados y visualmente autocontenido (sin dependencias externas, con estilos inline).
+        - La pregunta debe ser sobre la interpretación de ese gráfico.
+    2.  Para preguntas de "interpretación de salida":
+        - Debes generar una TABLA o salida de un programa estadístico (como R, SPSS, Stata) y colocarla como texto plano formateado en el campo "statisticalOutput".
+        - La pregunta debe ser sobre la interpretación de esa salida.
+    3.  Para el resto de las preguntas, mantén un buen balance entre temas y entre "cálculo sencillo" y "conceptual/razonamiento".
+    4.  Diversidad de temas: No debe haber más de ${Math.max(3, Math.ceil(numQuestions / 4))} preguntas del mismo tema en todo el cuestionario.
+
+    Cada pregunta debe tener la siguiente estructura JSON:
+    - id: Un ID único.
+    - question: El texto de la pregunta.
+    - options: 4 opciones de respuesta (A, B, C, D).
+    - answer: La letra de la respuesta correcta.
+    - explanation: Explicaciones detalladas para la opción correcta e incorrectas.
+    - topic: El tema de bioestadística.
+    - type: El tipo de pregunta ('interpretación de gráfico', 'interpretación de salida', 'cálculo sencillo', o 'conceptual/razonamiento').
+    - svgChart: (SOLO para tipo 'interpretación de gráfico') Una cadena de texto con el código SVG completo del gráfico.
+    - statisticalOutput: (SOLO para tipo 'interpretación de salida') Una cadena de texto con la salida del software estadístico.
   `;
 
   switch (mode) {
@@ -95,7 +94,9 @@ const questionSchema = {
             required: ["correct", "incorrect"]
         },
         topic: { type: Type.STRING, description: "El tema de bioestadística." },
-        type: { type: Type.STRING, description: "Tipo de pregunta: 'cálculo sencillo' o 'conceptual/razonamiento'." },
+        type: { type: Type.STRING, description: "Tipo de pregunta: 'cálculo sencillo', 'conceptual/razonamiento', 'interpretación de gráfico', o 'interpretación de salida'." },
+        svgChart: { type: Type.STRING, description: "Código SVG completo para un gráfico a interpretar. Usar solo para tipo 'interpretación de gráfico'." },
+        statisticalOutput: { type: Type.STRING, description: "Texto pre-formateado de una salida de software estadístico. Usar solo para tipo 'interpretación de salida'." },
     },
     required: ["id", "question", "options", "answer", "explanation", "topic", "type"]
 };
@@ -133,7 +134,7 @@ export const generateQuiz = async (
         const optionsKeys = Object.keys(q.options) as Array<keyof Question['options']>;
         
         for (const key of optionsKeys) {
-            if (key !== q.answer && q.explanation.incorrect[key]) {
+            if (key !== q.answer && q.explanation.incorrect && q.explanation.incorrect[key]) {
                 incorrectExplanations[key] = q.explanation.incorrect[key];
             }
         }

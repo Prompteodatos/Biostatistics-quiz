@@ -30,7 +30,9 @@ export interface Question {
   answer: keyof Question['options'];
   explanation: Explanation;
   topic: string;
-  type: 'cálculo sencillo' | 'conceptual/razonamiento';
+  type: 'cálculo sencillo' | 'conceptual/razonamiento' | 'interpretación de gráfico' | 'interpretación de salida';
+  svgChart?: string;
+  statisticalOutput?: string;
 }
 
 export interface UserAnswer {

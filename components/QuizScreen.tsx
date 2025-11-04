@@ -125,6 +125,18 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ questions, onFinish }) => {
         <div className="bg-slate-800 p-6 rounded-lg shadow-xl">
           <p className="text-sm text-sky-400 font-medium mb-2">{currentQuestion.topic} ({currentQuestion.type})</p>
           <h2 className="text-xl md:text-2xl font-semibold text-white leading-snug">{currentQuestionIndex + 1}. {currentQuestion.question}</h2>
+        
+          {currentQuestion.statisticalOutput && (
+            <pre className="bg-slate-900 text-slate-300 p-4 rounded-md mt-4 text-sm overflow-x-auto font-mono">
+              <code>{currentQuestion.statisticalOutput}</code>
+            </pre>
+          )}
+          {currentQuestion.svgChart && (
+            <div 
+              className="bg-white p-2 sm:p-4 rounded-md mt-4 overflow-x-auto" 
+              dangerouslySetInnerHTML={{ __html: currentQuestion.svgChart }}
+            />
+          )}
         </div>
         
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-4">

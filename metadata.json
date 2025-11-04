@@ -1,5 +1,5 @@
 {
-  "name": "Biostatistics Quiz",
+  "name": "Quiz Biostatistics (graph & tables)",
   "description": "An interactive quiz application designed for health sciences students to master biostatistics concepts. It uses AI to generate balanced quizzes with detailed explanations for each answer.",
   "requestFramePermissions": []
 }
